@@ -1,0 +1,9 @@
+# Core dependencies
+pandas
+openpyxl
+
+# Data source
+wbdata
+
+# Visualization
+matplotlib
