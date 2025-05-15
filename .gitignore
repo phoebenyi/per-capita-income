@@ -22,7 +22,6 @@ env/
 .vscode/
 
 # Output
-*.xlsx
 *.csv
 *.zip
 *.bak
