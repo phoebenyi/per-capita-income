@@ -1,97 +1,136 @@
-# 🌍 Per Capita Income Consolidation (SG, TW, KR, JP)
+# 🌍 Per Capita GNI Consolidation (SG, TW, KR, JP)
 
-This project consolidates historical **GNI per capita** data for **Singapore**, **Taiwan**, **South Korea**, and **Japan**. It combines official Taiwan government statistics (DGBAS) and World Bank data via the `wbdata` Python API.
+This project consolidates **GNI per capita** data (in **current USD**) for **Singapore**, **Taiwan**, **South Korea**, and **Japan**, merging official Taiwan government statistics (DGBAS) with live World Bank data using the `wbdata` API.
 
 ---
 
-## 📦 Features
+## 📦 Key Features
 
-- ✅ Cleans raw **GNI per capita** data from Taiwan's **DGBAS**
-- ✅ Fetches **GNI per capita** (current USD) for SG, JP, KR via **World Bank**
-- ✅ Merges data into a standardized format
-- ✅ Outputs: `per_capita_income_consolidated.xlsx`
-- ✅ Optional data visualizations in notebook
+- ✅ Extracts and cleans Taiwan’s **GNI per capita (USD)** from raw **DGBAS** Excel files
+- ✅ Automatically fetches **GNI per capita (USD)** for SG, JP, and KR from **World Bank**
+- ✅ Standardizes and merges all data into consistent long + wide formats
+- ✅ Outputs:
+  - `per_capita_income_long.xlsx` (tidy, long format)
+  - `per_capita_income_comparison.xlsx` (wide format for visual checks)
+- ✅ Optional visualizations included (trend plots, histograms)
+- ✅ Float-safe matching sanity check between wide vs long outputs
 
 ---
 
 ## 📚 Data Sources
 
-- 🇹🇼 Taiwan GNI: [DGBAS](https://eng.stat.gov.tw/)
-- 🌍 GNI per capita: [World Bank](https://data.worldbank.org/indicator/NY.GNP.PCAP.CD)
+| Source         | Countries           | Metric                         |
+|----------------|---------------------|--------------------------------|
+| 🇹🇼 DGBAS       | Taiwan only          | GNI per capita (current USD)   |
+| 🌍 World Bank   | SG, JP, KR          | GNI per capita (current USD) – [`NY.GNP.PCAP.CD`](https://data.worldbank.org/indicator/NY.GNP.PCAP.CD)
 
 ---
 
 ## 🚀 Setup Instructions
 
-### 1. Create Virtual Environment
+### 1. Environment Setup
 
 ```bash
 python -m venv venv
-venv\Scripts\activate
-```
-
-### 2. Install Dependencies
-
-```bash
+venv\Scripts\activate   # or source venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
 ```
----
 
-## ↻ HOW IT WORKS (EXPLANATION FOR USERS)
+### 2. Required Files
 
-1. **Manually download Taiwan’s GNI per capita data** from the official DGBAS website:
-   - https://eng.stat.gov.tw
-   - Look for *Gross National Income per Capita (USD)*, typically under *National Accounts*.
+1. Manually download the **DGBAS Excel file** from:  
+   👉 https://eng.stat.gov.tw  
+   Look for *"Gross National Income per Capita (USD)"*, usually under *National Accounts*.
 
-2. **Save it as**:
-   ```
-   dgbas.xlsx
-   ```
+2. Save the file as:
 
-3. **Replace the old `dgbas.xlsx` file** in the project folder.
+```
+dgbas.xlsx
+```
 
-4. **Run all cells in the Jupyter notebook**:
-   - It will clean and extract Taiwan’s per capita GNI from `dgbas.xlsx`
-   - Then it auto-fetches Singapore, Japan, and Korea **GNI per capita** from World Bank (via `wbdata`)
-   - All data is merged and exported to:
-     ```
-     per_capita_income_consolidated.xlsx
-     ```
+3. Place `dgbas.xlsx` in the root directory of this project.
 
 ---
 
-## ❓ Common Questions
+## ▶️ Running the Notebook
 
-### ♻️ Does the World Bank data always update?
+Open and run all cells in `per_capita_income_1950_onward.ipynb`.
 
-**Yes.**  
-When using `wbdata`, the World Bank data is fetched **live at runtime**, so it's always the most up-to-date public data available. No need to redownload anything manually for SG, JP, or KR.
+What it does:
+
+- ✅ Extracts the correct **Per Capita GNI (USD)** column from Taiwan’s DGBAS sheet (column 11)
+- ✅ Fetches live data from World Bank for SG, JP, and KR
+- ✅ Standardizes and deduplicates all years
+- ✅ Outputs clean Excel files:
+  - `per_capita_income_long.xlsx`
+  - `per_capita_income_comparison.xlsx`
+- ✅ Confirms wide ≡ long values (within float tolerance)
 
 ---
 
-### 💰 Are all the GNI values in the same format?
+## 💡 Data Consistency FAQ
 
-| Source    | Value Type                            | Notes                                                                 |
-|-----------|----------------------------------------|-----------------------------------------------------------------------|
-| **DGBAS** | GNI per capita (USD) – **Nominal**     | This is **not adjusted** for inflation or PPP. It’s raw USD amounts. |
-| **World Bank** (`NY.GNP.PCAP.CD`) | GNI per capita (USD, **current prices**) | This is also **nominal**, in **current USD**, and consistent format. |
+### 💱 Are all values comparable?
 
-Conclusion:
-- ✅ **Yes — both DGBAS and World Bank data are in comparable nominal USD terms**
-- ❌ They are **not Atlas method** or **PPP-adjusted** — this ensures consistency
-- If you want constant prices or PPP, you could later use:
-  - `NY.GNP.PCAP.KD` for **constant USD**
-  - `NY.GNP.PCAP.PP.CD` for **PPP-adjusted**
+Yes — all values are **GNI per capita in current USD**:
+
+| Source     | Type                              | Adjustment     |
+|------------|-----------------------------------|----------------|
+| DGBAS      | GNI per capita (USD) – Nominal    | ❌ Not adjusted |
+| World Bank | GNI per capita (USD) – Nominal    | ❌ Not adjusted |
+
+This makes them directly comparable without conversion.
+
+---
+
+## ✅ Internal Consistency Check
+
+The notebook auto-checks that:
+
+> **Pivoted wide-format data matches the original long-format data**  
+> with tolerance ±1.5 USD
+
+Any mismatch rows are printed for debugging.
+
+---
+
+## 🔍 Want Different Formats?
+
+To use **PPP** or **constant USD**, change the indicator in `fetch_from_wb()`:
+
+| Indicator Code        | Meaning                    |
+|------------------------|----------------------------|
+| `NY.GNP.PCAP.CD`       | **Nominal** GNI per capita (USD) ✅ default
+| `NY.GNP.PCAP.KD`       | Constant USD (adjusted for inflation)
+| `NY.GNP.PCAP.PP.CD`    | PPP-adjusted GNI per capita
+
+---
+
+## 📊 Optional Charts
+
+The notebook also generates:
+
+- 📈 Trend plot: GNI per capita over time
+- 📊 Distribution histogram by country
 
 ---
 
 ## 🛠️ Tech Stack
 
-- Python 3.11
-- pandas, wbdata, matplotlib, jupyter, openpyxl
+- Python 3.11+
+- Jupyter Notebook
+- `pandas`, `openpyxl`, `wbdata`, `matplotlib`
+
+---
+
+## 🧠 Notes for Developers
+
+- The deduplication step uses `drop_duplicates(subset=["Country", "Year"])` to ensure pivoting doesn't explode.
+- Use `pivot_table(..., aggfunc="mean")` for resilience against duplicates.
+- A merged long–wide format is used for robust validation.
 
 ---
 
 ## 📬 License
 
-MIT — feel free to use, fork, or adapt.
+MIT — feel free to fork, adapt, or share.
